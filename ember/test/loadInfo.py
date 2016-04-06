@@ -179,7 +179,7 @@ class LoadInfo:
 
 	def foo( self, jobId, x, statNodes ):
 		nidList, ranksPerNode, params = x
-		
+
 		# In order to pass the motifLog parameter to only desired nodes of a job
 		# Here we choose the first node in the nidList
 		motifLogNodes = []

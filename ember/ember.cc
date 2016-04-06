@@ -424,11 +424,9 @@ static const ElementInfoParam stop_params[] = {
 //NetworkSim: unstructured motif params
 static const ElementInfoParam unstructured_params[] = {
 	{	"arg.iterations",		"Sets the number of unstructured motif operations to perform", 	"1"},
-	{	"arg.compute",		"Sets the time spent computing",	 	"1"},
-	{	"arg.graphfile",		"Name of the file the includes the communication graph",	 	"Null"},
-	{	"arg.nx",			"Sets the problem size in X-dimension",			"100"},
-	{	"arg.ny",			"Sets the problem size in Y-dimension",			"100"},
-	{	"arg.nz",			"Sets the problem size in Z-dimension",			"100"},
+	{	"arg.computetime",		"Sets the number of nanoseconds to compute for", 	"0"},
+	{	"arg.graphfile",		"Name of the file the includes the communication graph",	 	"-1"},
+	{	"arg.p_size",			"Sets the problem size",			"10000"},
 	{	"arg.fields_per_cell",	"Specify how many variables are being computed per cell (this is one of the dimensions in message size. Default is 1", "1"},
 	{	"arg.datatype_width",	"Specify the size of a single variable, single grid point, typically 8 for double, 4 for float, default is 8 (double). This scales message size to ensure byte count is correct.", "8"},
 	{	NULL,	NULL,	NULL	}

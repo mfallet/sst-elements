@@ -1,4 +1,5 @@
 
+
 import sys,getopt
 sys.path.insert(0, '/mnt/nokrb/fkaplan3/SST/git/sst/sst/elements/ember/test')
 import defaultParams
@@ -40,6 +41,10 @@ netPktSize = ''
 netTopo = ''
 netShape = ''
 rtrArb = ''
+routingAlg = ''
+host_bw = ''
+group_bw = ''
+global_bw = ''
 
 rndmPlacement = False
 #rndmPlacement = True
@@ -56,14 +61,15 @@ motifDefaults = {
 }
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "", ["topo=", "shape=",
+    opts, args = getopt.getopt(sys.argv[1:], "", ["topo=", "shape=", "routingAlg=", 
 		"debug=","platform=","numNodes=",
 		"numCores=","loadFile=","cmdLine=","printStats=","randomPlacement=",
 		"emberVerbose=","netBW=","netPktSize=","netFlitSize=",
 		"rtrArb=","embermotifLog=",	"rankmapper=",
+        "host_bw=","group_bw=","global_bw=",
 		"bgPercentage=","bgMean=","bgStddev=","bgMsgSize="])
 
-except getopt.GetopError as err:
+except getopt.GetoptError as err:
     print str(err)
     sys.exit(2)
 
@@ -72,6 +78,8 @@ for o, a in opts:
         netShape = a
     elif o in ("--platform"):
         platform = a
+    elif o in ("--routingAlg"):
+        routingAlg = a
     elif o in ("--numCores"):
         numCores = a
     elif o in ("--numNodes"):
@@ -96,6 +104,12 @@ for o, a in opts:
         emberrankmapper = a
     elif o in ("--netBW"):
         netBW = a
+    elif o in ("--host_bw"):
+        host_bw = a
+    elif o in ("--group_bw"):
+        group_bw = a
+    elif o in ("--global_bw"):
+        global_bw = a
     elif o in ("--netFlitSize"):
         netFlitSize = a
     elif o in ("--netPktSize"):
@@ -194,8 +208,22 @@ elif "fattree" == netTopo:
 
 elif "dragonfly" == netTopo:
 		
-	topoInfo = DragonFlyInfo(netShape)
-	topo = topoDragonFly()
+    topoInfo = DragonFlyInfo(netShape)
+    if "" != routingAlg:
+        topoInfo.params["dragonfly:algorithm"] = routingAlg
+    if "" != host_bw:
+        topoInfo.params["link_bw:host"] = host_bw
+    if "" != group_bw:
+        topoInfo.params["link_bw:group"] = group_bw
+    if "" != global_bw:
+        topoInfo.params["link_bw:global"] = global_bw
+
+    topo = topoDragonFly()
+
+elif "dragonfly2" == netTopo:
+
+	topoInfo = DragonFly2Info(netShape)
+	topo = topoDragonFly2()
 
 else:
 	sys.exit("how did we get here")
@@ -289,9 +317,6 @@ if embermotifLog:
 if emberrankmapper:
     emberParams['rankmapper'] = emberrankmapper
 
-#print "Ember params are:"
-#print emberParams
-
 print "EMBER: network: BW={0} pktSize={1} flitSize={2}".format(
         networkParams['link_bw'], networkParams['packetSize'], networkParams['flitSize'])
 
@@ -330,23 +355,7 @@ else:
 		sys.exit("Error: need a loadFile or cmdLine")
 
 
-#sst.setStatisticLoadLevel(7)
-#sst.enableAllStatisticsForComponentType("merlin.hr_router")
-#sst.setStatisticOutput("sst.statOutputCSV")
-#sst.setStatisticOutputOptions({"filepath" : "merlin_stats.csv"})
-
-#sst.enableStatisticForComponentType("merlin.hr_router", "send_packet_count")
-
-
-#sst.setStatisticOutput("sst.statOutputConsole")
-
-#sst.enableAllStatisticsForAllComponents()
-#sst.setStatisticOutput("sst.statOutputCSV")
-#sst.setStatisticOutputOptions({"filepath": "all_stats.csv"}) 
-
-
 topo.prepParams()
 
 topo.setEndPointFunc( loadInfo.setNode )
 topo.build()
-

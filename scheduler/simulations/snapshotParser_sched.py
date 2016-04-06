@@ -241,9 +241,10 @@ def generate_ember_script (TimeObject, JobObjects, loadfile, mapfile):
         execcommand = "sst --stop-at " + StopAtTime
     # Generate commandline string to execute
     #execcommand += " --model-options=\"--topo=torus --shape=5x4x4 --numCores=4 --netFlitSize=8B --netPktSize=1024B --netBW=4GB/s --emberVerbose=0 --printStats=1"
-    execcommand += " --model-options=\"--topo=dragonfly --shape=9:2:4:4 --numCores=2 --netFlitSize=8B --netPktSize=1024B --netBW=1GB/s --emberVerbose=0 --printStats=1"
+    execcommand += " --model-options=\"--topo=dragonfly --shape=9:2:4:4 --routingAlg=minimal --numCores=2 --netFlitSize=8B --netPktSize=1024B --emberVerbose=0 --printStats=1"
+    execcommand += " --host_bw=1GB/s --group_bw=1GB/s --global_bw=0.5GB/s --netBW=1.0GB/s"
     execcommand += " --embermotifLog=" + currDir + "/motif"
-    #execcommand += " --rankmapper=ember.CustomMap"
+    execcommand += " --rankmapper=ember.CustomMap"
     execcommand += " --loadFile=" + loadfile + "\""
     execcommand += " " + emberLoad + "\n"
 

@@ -108,7 +108,7 @@ def generate_ember_script (options, loadfile):
     #execcommand += " --model-options=\"--topo=torus --shape=5x4x4 --numCores=4 --netFlitSize=8B --netPktSize=1024B --netBW=4GB/s --emberVerbose=0 --printStats=1"
     execcommand += " --model-options=\"--topo=dragonfly --shape=7:2:2:4 --numCores=4 --netFlitSize=8B --netPktSize=1024B --netBW=4GB/s --emberVerbose=0 --printStats=1"
     execcommand += " --embermotifLog=/home/fkaplan/SST/scratch/src/sst-simulator/sst/elements/scheduler/simulations/motif"
-    #execcommand += " --rankmapper=ember.CustomMap"
+    execcommand += " --rankmapper=ember.CustomMap"
     execcommand += " --loadFile=" + loadfile + "\""
     execcommand += " " + emberLoad + " > " + options.emberOutFile + "\n"
     #execcommand += " " + emberLoad + "\n"
@@ -200,11 +200,11 @@ def main():
     fo.close()
         
     #for application in ['GD99_b', 'Sandi_authors', 'GD98_c', 'grid1_dual', 'grid1', 'sphere3']:
-    for application in ['GD99_b']:
-        for mapper in ['PaCMap']:
+    for application in ['alltoall']:
+        for mapper in ['random']:
         #for mapper in ['libtopomap', 'nearestamap', 'PaCMap', 'random']:
             if mapper == 'random':
-                num_iters = 5
+                num_iters = 1
             else:
                 num_iters = 1 
             for iteration in range(num_iters):
@@ -216,7 +216,7 @@ def main():
 
             fileName = options.runtimeOutFile
             fo = open(fileName, "a")
-            fo.writelines("\n")
+            #fo.writelines("\n")
             fo.close()
 
 if __name__ == '__main__':
