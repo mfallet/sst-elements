@@ -1,5 +1,4 @@
 
-
 import sys,getopt
 sys.path.insert(0, '/mnt/nokrb/fkaplan3/SST/git/sst/sst/elements/ember/test')
 import defaultParams
@@ -24,6 +23,8 @@ debug    = 0
 emberVerbose = 0
 embermotifLog = ''
 emberrankmapper = ''
+embermapFile = ''
+networkStatOut = ''
 
 statNodeList = []
 jobid = 0
@@ -63,9 +64,9 @@ motifDefaults = {
 try:
     opts, args = getopt.getopt(sys.argv[1:], "", ["topo=", "shape=", "routingAlg=", 
 		"debug=","platform=","numNodes=",
-		"numCores=","loadFile=","cmdLine=","printStats=","randomPlacement=",
+		"numCores=","loadFile=","cmdLine=","printStats=","networkStatOut=","randomPlacement=",
 		"emberVerbose=","netBW=","netPktSize=","netFlitSize=",
-		"rtrArb=","embermotifLog=",	"rankmapper=",
+		"rtrArb=","embermotifLog=",	"rankmapper=", "mapFile=",
         "host_bw=","group_bw=","global_bw=",
 		"bgPercentage=","bgMean=","bgStddev=","bgMsgSize="])
 
@@ -96,12 +97,16 @@ for o, a in opts:
         netTopo = a
     elif o in ("--printStats"):
         motifDefaults['printStats'] = a
+    elif o in ("--networkStatOut"):
+        networkStatOut = a
     elif o in ("--emberVerbose"):
         emberVerbose = a
     elif o in ("--embermotifLog"):
         embermotifLog = a
     elif o in ("--rankmapper"):
         emberrankmapper = a
+    elif o in ("--mapFile"):
+        embermapFile = a
     elif o in ("--netBW"):
         netBW = a
     elif o in ("--host_bw"):
@@ -176,41 +181,46 @@ elif platform == "exa":
     platNetConfig = exaParams.netConfig
 
 if netBW:
-	networkParams['link_bw'] = netBW
+    networkParams['link_bw'] = netBW
+    nicParams['link_bw'] = netBW
 
 if netFlitSize:
-	networkParams['flitSize'] = netFlitSize
+    networkParams['flitSize'] = netFlitSize
 
 if netPktSize:
-	networkParams['packetSize'] = netPktSize
+    networkParams['packetSize'] = netPktSize
 
 if "" == netTopo:
-	if platNetConfig['topology']:
-		netTopo = platNetConfig['topology']
-	else:
-		sys.exit("What topo? [torus|fattree|dragonfly]")
+
+    if platNetConfig['topology']:
+        netTopo = platNetConfig['topology']
+    else:
+        sys.exit("What topo? [torus|fattree|dragonfly]")
 
 if "" == netShape:
-	if platNetConfig['shape']:
-		netShape = platNetConfig['shape']
-	else:
-		sys.exit("Error: " + netTopo + " needs shape")
+
+    if platNetConfig['shape']:
+        netShape = platNetConfig['shape']
+    else:
+        sys.exit("Error: " + netTopo + " needs shape")
 
 if "torus" == netTopo:
 
-	topoInfo = TorusInfo(netShape)
-	topo = topoTorus()
+    topoInfo = TorusInfo(netShape)
+    topo = topoTorus()
 
 elif "fattree" == netTopo:
 
-	topoInfo = FattreeInfo(netShape)
-	topo = topoFatTree()
+    topoInfo = FattreeInfo(netShape)
+    topo = topoFatTree()
 
 elif "dragonfly" == netTopo:
-		
+
     topoInfo = DragonFlyInfo(netShape)
     if "" != routingAlg:
         topoInfo.params["dragonfly:algorithm"] = routingAlg
+        if routingAlg == "valiant":
+            nicParams['module'] = "merlin.reorderlinkcontrol"
     if "" != host_bw:
         topoInfo.params["link_bw:host"] = host_bw
     if "" != group_bw:
@@ -222,7 +232,18 @@ elif "dragonfly" == netTopo:
 
 elif "dragonfly2" == netTopo:
 
-	topoInfo = DragonFly2Info(netShape)
+    topoInfo = DragonFly2Info(netShape)
+    if "" != routingAlg:
+        topoInfo.params["dragonfly:algorithm"] = routingAlg
+        if routingAlg == "valiant":
+            nicParams['module'] = "merlin.reorderlinkcontrol"
+    if "" != host_bw:
+        topoInfo.params["link_bw:host"] = host_bw
+    if "" != group_bw:
+        topoInfo.params["link_bw:group"] = group_bw
+    if "" != global_bw:
+        topoInfo.params["link_bw:global"] = global_bw
+
 	topo = topoDragonFly2()
 
 else:
@@ -316,6 +337,8 @@ if embermotifLog:
     emberParams['motifLog'] = embermotifLog
 if emberrankmapper:
     emberParams['rankmapper'] = emberrankmapper
+if embermapFile:
+    emberParams['mapFile'] = embermapFile
 
 print "EMBER: network: BW={0} pktSize={1} flitSize={2}".format(
         networkParams['link_bw'], networkParams['packetSize'], networkParams['flitSize'])
@@ -359,3 +382,9 @@ topo.prepParams()
 
 topo.setEndPointFunc( loadInfo.setNode )
 topo.build()
+
+sst.setStatisticLoadLevel(8) 
+sst.setStatisticOutput("sst.statOutputCSV")
+sst.setStatisticOutputOptions( {"filepath" : "%s" %(networkStatOut), "separator" : ", " } )
+sst.enableAllStatisticsForComponentType("merlin.hr_router")
+

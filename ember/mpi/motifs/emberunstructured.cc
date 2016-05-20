@@ -32,6 +32,7 @@ EmberUnstructuredGenerator::EmberUnstructuredGenerator(SST::Component* owner, Pa
 	iterations = (uint32_t) params.find_integer("arg.iterations", 1);
 	nsCompute  = (uint64_t) params.find_integer("arg.computetime", 0);
 
+    jobId        = (int) params.find_integer("_jobId"); //NetworkSim
 	configure();
 }
 
@@ -62,15 +63,16 @@ void EmberUnstructuredGenerator::configure()
 	SST::Scheduler::CommParser commParser;
 	rawCommMap = commParser.readCommFile(graphFile, size());
 
-	/*
-	for(unsigned int i = 0; i < rawCommMap->size(); i++){
-        std::cout << "rawCommMap(" << i << "):" << std::endl;
+	if(0 == rank()){
+		for(unsigned int i = 0; i < rawCommMap->size(); i++){
+	        //std::cout << "rawCommMap(" << i << "):" << std::endl;
 
-        for(std::map<int, int>::iterator it = rawCommMap->at(i).begin(); it != rawCommMap->at(i).end(); it++){
-        	std::cout << i << " communicates with " << it->first << std::endl;
+	        for(std::map<int, int>::iterator it = rawCommMap->at(i).begin(); it != rawCommMap->at(i).end(); it++){
+	        	//std::cout << i << " communicates with " << it->first << std::endl;
+			}
 		}
-	}
-	*/
+	}	
+	
 
 	//Create the actual communication map based on the custom task mapping
 	//Ex: TaskMapping on Node0 [3,5,7,120] -> CustomMap[0]=3, CustomMap[1]=5, CustomMap[2]=7, CustomMap[3]=120
@@ -85,12 +87,14 @@ void EmberUnstructuredGenerator::configure()
 		int srcTask, destTask;
 		for(unsigned int i = 0; i < CommMap->size(); i++){
 	        srcTask = cm->CustomMap[i];
-	        //std::cout << "Rank(" << i << ") is in fact Rank(" << srcTask << ")"<< std::endl;
+	        //if(0 == rank())
+	        	//std::cout << "Rank(" << i << ") is in fact Rank(" << srcTask << ")"<< std::endl;
 
 	        for(std::map<int, int>::iterator it = rawCommMap->at(i).begin(); it != rawCommMap->at(i).end(); it++){
 	        	destTask = cm->CustomMap[it->first];
-	        	CommMap->at(srcTask)[destTask] = 1; //1 could be changed to the weight (it->second) in the future 
-	        	//std::cout << srcTask << " communicates with " << destTask << std::endl;
+	        	CommMap->at(srcTask)[destTask] = 1; //1 could be changed to the weight (it->second) in the future
+	        	//if(0 == rank()) 
+	        		//std::cout << srcTask << " communicates with " << destTask << std::endl;
 			}
 		}
 	}
@@ -140,6 +144,9 @@ bool EmberUnstructuredGenerator::generate( std::queue<EmberEvent*>& evQ )
 		*/
 
     if ( ++m_loopIndex == iterations ) {
+    	//NetworkSim: report total running time
+        output("Job Finished: JobNum:%d Time:%" PRIu64 " us\n", jobId,  getCurrentSimTimeMicro());
+
         return true;
     } else {
         return false;

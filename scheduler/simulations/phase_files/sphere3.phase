@@ -1,4 +1,4 @@
 Init
-Unstructured iterations=100	graphfile=graph_files/sphere3.mtx
+Unstructured iterations=50	graphfile=graph_files/sphere3.mtx
 Stop
 Fini

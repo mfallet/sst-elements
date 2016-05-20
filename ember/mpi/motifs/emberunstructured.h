@@ -44,6 +44,7 @@ private:
 	std::vector<std::map<int,int> >* rawCommMap; //raw communication map taken from input graph file
 	std::vector<std::map<int,int> >* CommMap; //updated communication map based on the task mapping
 
+	int jobId; //NetworkSim
 };
 
 }

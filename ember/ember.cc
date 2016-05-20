@@ -288,6 +288,8 @@ static const ElementInfoParam component_params[] = {
 
     { "rankmapper", "Sets the rank mapping SST module to load to rank translations, default is linear mapping", "ember.LinearMap" },
 
+    { "mapFile", "Sets the name of the input file for custom map", "mapFile.txt" },
+
     { "motif%(motif_count)d", "Sets the event generator or motif for the engine", "ember.EmberPingPongGenerator" },
 
     { "name", "Sets the event generator or motif for the engine", "ember.EmberPingPongGenerator" },
@@ -707,7 +709,7 @@ static const ElementInfoParam linearMapper_params[] = {
 
 //NetworkSim: added custom mapper params
 static const ElementInfoParam customMapper_params[] = {
-	{	"mapFile",			"Sets the name of the input file for custom map", "customMap.txt" },
+	{	"mapFile",			"Sets the name of the input file for custom map", "mapFile.txt" },
 	{	"_mapjobId",		"Sets the jobId for custom map", "-1" },
 	{	NULL, NULL, NULL 	}
 };
