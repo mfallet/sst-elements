@@ -51,6 +51,8 @@ EmberHalo3DGenerator::EmberHalo3DGenerator(SST::Component* owner, Params& params
 	z_down = -1;
 	z_up   = -1;
 
+    jobId        = (int) params.find_integer("_jobId"); //NetworkSim
+
 	configure();
 }
 
@@ -249,6 +251,9 @@ bool EmberHalo3DGenerator::generate( std::queue<EmberEvent*>& evQ )
 		}
 
     if ( ++m_loopIndex == iterations ) {
+    	//NetworkSim: report total running time
+        output("Job Finished: JobNum:%d Time:%" PRIu64 " us\n", jobId,  getCurrentSimTimeMicro());
+
         return true;
     } else {
         return false;

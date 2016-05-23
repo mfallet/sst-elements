@@ -10,6 +10,7 @@ import os, sys
 from optparse import OptionParser
 import math
 import numpy as np
+import copy
 
 class Application:
     def __init__(self):
@@ -108,7 +109,7 @@ def generate_ember_script (options, loadfile):
     #execcommand += " --model-options=\"--topo=torus --shape=5x4x4 --numCores=4 --netFlitSize=8B --netPktSize=1024B --netBW=4GB/s --emberVerbose=0 --printStats=1"
     execcommand += " --model-options=\"--topo=dragonfly --shape=7:2:2:4 --numCores=4 --netFlitSize=8B --netPktSize=1024B --netBW=4GB/s --emberVerbose=0 --printStats=1"
     execcommand += " --embermotifLog=/home/fkaplan/SST/scratch/src/sst-simulator/sst/elements/scheduler/simulations/motif"
-    #execcommand += " --rankmapper=ember.CustomMap"
+    execcommand += " --rankmapper=ember.CustomMap"
     execcommand += " --loadFile=" + loadfile + "\""
     execcommand += " " + emberLoad + " > " + options.emberOutFile + "\n"
     #execcommand += " " + emberLoad + "\n"
@@ -138,14 +139,31 @@ def get_runtime(options):
 
     return (InfoPair)
 
+def reorder_InfoPair(InfoPair):
+
+    ordered_InfoPair = copy.deepcopy(InfoPair)
+
+    for pair in InfoPair:
+        index = pair[1] + 1
+        ordered_InfoPair[index][0] = pair[0]
+        ordered_InfoPair[index][1] = pair[1]
+
+    return (ordered_InfoPair)
+
 def record_runtime(options, InfoPair):
 
     fileName = options.runtimeOutFile
     fo = open(fileName, "a")
 
-    line = "RunningTime = %d\n" % (int(InfoPair[0][0]))
-    fo.writelines(line)
+    #InfoPair = reorder_InfoPair(InfoPair)
 
+    line = ""
+    for pair in InfoPair:
+        line += "%d\t" % (int(pair[0][0]))
+        #line += "%d\t" % (int(pair[0]))
+    line += "\n"
+
+    fo.writelines(line)
     fo.close()
 
 # Extracts the necessary time, jobNum info from the given string
@@ -158,7 +176,7 @@ def grep_timeInfo(string, mode):
         jobNum = -1
 
         time = convertToMicro(number, unit)
-        return (time, jobNum)
+        return ([time, jobNum])
 
     elif mode == 'JobFinished':
         string = string.split(' ')
@@ -167,7 +185,7 @@ def grep_timeInfo(string, mode):
         unit   = string[4].split('\n')[0]
 
         time = convertToMicro(number, unit)
-        return (time, jobNum)
+        return ([time, jobNum])
 
 # Converts the units for the time info to microseconds
 def convertToMicro(number, unit):
@@ -199,25 +217,29 @@ def main():
     fo = open(options.runtimeOutFile, "w")
     fo.close()
         
-    #for application in ['GD99_b', 'Sandi_authors', 'GD98_c', 'grid1_dual', 'grid1', 'sphere3']:
-    for application in ['GD99_b']:
+    #for application in ['GD99_b', 'Sandi_authors', 'GD98_c', 'grid1_dual', 'grid1', 'sphere3', 'alltoall']:
+    #for application in ['grid1', 'sphere3', 'alltoall']:
+    for application in ['alltoall']:
+    #for application in ['GD99_b']:
+        InfoPair = []
         for mapper in ['PaCMap']:
+        #for mapper in ['spread', 'simple', 'PaCMap', 'random']:
         #for mapper in ['libtopomap', 'nearestamap', 'PaCMap', 'random']:
             if mapper == 'random':
-                num_iters = 5
+                num_iters = 1
             else:
                 num_iters = 1 
             for iteration in range(num_iters):
 
                 execcommand = "./run_DetailedNetworkSim.py --emberOut ember.out --schedPy test_MappingImpact_%s_%s.py " % (mapper, application)
                 run(execcommand)
-                InfoPair = get_runtime(options)
-                record_runtime(options, InfoPair)
+                InfoPair.append(get_runtime(options))
+        record_runtime(options, InfoPair)
 
-            fileName = options.runtimeOutFile
-            fo = open(fileName, "a")
-            fo.writelines("\n")
-            fo.close()
+            #fileName = options.runtimeOutFile
+            #fo = open(fileName, "a")
+            #fo.writelines("\n")
+    fo.close()
 
 if __name__ == '__main__':
     main()

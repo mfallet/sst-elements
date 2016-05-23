@@ -314,6 +314,10 @@ epParams = {}
 epParams.update(emberParams)
 epParams.update(hermesParams)
 
+emberParams['rankmapper'] = "ember.CustomMap"
+print "Printing Params in emberLoad.py"
+print emberParams #Fulya
+
 loadInfo = LoadInfo( nicParams, epParams, numNodes, numCores, topoInfo.getNumNodes()  )
 
 if len(loadFile) > 0:
@@ -329,6 +333,7 @@ else:
 		loadInfo.initWork( workList, statNodeList )
 	else:
 		sys.exit("Error: need a loadFile or cmdLine")
+
 
 topo.prepParams()
 

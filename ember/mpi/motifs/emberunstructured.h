@@ -35,22 +35,16 @@ private:
 
 	// Share these over all instances of the motif
 
-	uint32_t nx;
-	uint32_t ny;
-	uint32_t nz;
+	uint32_t p_size; //problem size
 	uint32_t items_per_cell;
 	uint32_t sizeof_cell;
+	uint32_t nsCompute;
 
-	int32_t  x_down;
-	int32_t  x_up;
-	int32_t  y_down;
-	int32_t  y_up;
-	int32_t  z_down;
-	int32_t  z_up;
 
 	std::vector<std::map<int,int> >* rawCommMap; //raw communication map taken from input graph file
 	std::vector<std::map<int,int> >* CommMap; //updated communication map based on the task mapping
 
+	int jobId; //NetworkSim
 };
 
 }

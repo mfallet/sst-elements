@@ -53,7 +53,9 @@ public:
                 input.open( fileName.c_str() );
 
                 if(!input.is_open()){
-                        //fatal(CALL_INFO, -1, "Unable to open job task map file: %s\n", fileName.c_str());
+                        std::cerr << "Error: Unable to open job task map file: \'" 
+                                    << fileName.c_str() << "\'" << std::endl;
+                        exit(-1);
                 }
 
                 std::string line;

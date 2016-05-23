@@ -26,46 +26,53 @@ EmberUnstructuredGenerator::EmberUnstructuredGenerator(SST::Component* owner, Pa
 	if(graphFile.compare("-1") == 0)
 		fatal(CALL_INFO, -1, "Communication graph file must be specified for unstructured motifs!\n");
 
-	nx  = (uint32_t) params.find_integer("arg.nx", 100);
-	ny  = (uint32_t) params.find_integer("arg.ny", 100);
-	nz  = (uint32_t) params.find_integer("arg.nz", 100);
-
+	p_size  = (uint32_t) params.find_integer("arg.p_size", 10000);
 	items_per_cell = (uint32_t) params.find_integer("arg.fields_per_cell", 1);
 	sizeof_cell = (uint32_t) params.find_integer("arg.datatype_width", 8);
-
 	iterations = (uint32_t) params.find_integer("arg.iterations", 1);
+	nsCompute  = (uint64_t) params.find_integer("arg.computetime", 0);
 
-	x_down = -1;
-	x_up   = -1;
-	y_down = -1;
-	y_up   = -1;
-	z_down = -1;
-	z_up   = -1;
-
+    jobId        = (int) params.find_integer("_jobId"); //NetworkSim
 	configure();
 }
 
 
 void EmberUnstructuredGenerator::configure()
 {
-	//Get the name of the graph file from CustomRankMap object
+	//Check the type of the rankmapper: CustomMap or LinearMap
+	bool use_CustomRankMap;
 	EmberCustomRankMap* cm = dynamic_cast<EmberCustomRankMap*>(m_rankMap);
 	if(cm == NULL)
-		fatal(CALL_INFO, -1, "CustomRankMap is NULL!\n");
-	
-	//std::cout << "graph file: " << graphFile.c_str() <<  std::endl;
+		use_CustomRankMap = false;
+	else
+		use_CustomRankMap = true;
 
+    if(0 == rank()) {
+		output("Unstructured motif problem size: %" PRIu32 "\n", p_size);
+		output("Unstructured motif compute time: %" PRIu32 " ns\n", nsCompute);
+		output("Unstructured motif iterations: %" PRIu32 "\n", iterations);
+		output("Unstructured motif iterms/cell: %" PRIu32 "\n", items_per_cell);
+		output("Unstructured motif communication graph file: %s \n", graphFile.c_str());
+		if(use_CustomRankMap)
+			output("Unstructured motif rankmap: CustomRankMap\n");
+		else
+			output("Unstructured motif rankmap: LinearRankMap\n");			
+	}
+	
 	//Read raw communication from the graph file
 	SST::Scheduler::CommParser commParser;
 	rawCommMap = commParser.readCommFile(graphFile, size());
 
-	for(unsigned int i = 0; i < rawCommMap->size(); i++){
-        //std::cout << "rawCommMap(" << i << "):" << std::endl;
+	if(0 == rank()){
+		for(unsigned int i = 0; i < rawCommMap->size(); i++){
+	        //std::cout << "rawCommMap(" << i << "):" << std::endl;
 
-        for(std::map<int, int>::iterator it = rawCommMap->at(i).begin(); it != rawCommMap->at(i).end(); it++){
-        	//std::cout << i << " communicates with " << it->first << std::endl;
+	        for(std::map<int, int>::iterator it = rawCommMap->at(i).begin(); it != rawCommMap->at(i).end(); it++){
+	        	//std::cout << i << " communicates with " << it->first << std::endl;
+			}
 		}
-	}
+	}	
+	
 
 	//Create the actual communication map based on the custom task mapping
 	//Ex: TaskMapping on Node0 [3,5,7,120] -> CustomMap[0]=3, CustomMap[1]=5, CustomMap[2]=7, CustomMap[3]=120
@@ -73,25 +80,28 @@ void EmberUnstructuredGenerator::configure()
 	CommMap = new std::vector<std::map<int,int> >;
 	CommMap->resize(size());
 
-	int srcTask, destTask;
-	for(unsigned int i = 0; i < CommMap->size(); i++){
-        srcTask = cm->CustomMap[i];
-        //std::cout << "Rank(" << i << ") is in fact Rank(" << srcTask << ")"<< std::endl;
+	//Create the actual communication map based on the custom task mapping
+	//Ex: TaskMapping on Node0 [3,5,7,120] -> CustomMap[0]=3, CustomMap[1]=5, CustomMap[2]=7, CustomMap[3]=120
+	//	  If rawCommMap says Task0 communicates Task1 -> CommMap says Task3 communicates Task5
+	if (use_CustomRankMap){
+		int srcTask, destTask;
+		for(unsigned int i = 0; i < CommMap->size(); i++){
+	        srcTask = cm->CustomMap[i];
+	        //if(0 == rank())
+	        	//std::cout << "Rank(" << i << ") is in fact Rank(" << srcTask << ")"<< std::endl;
 
-        for(std::map<int, int>::iterator it = rawCommMap->at(i).begin(); it != rawCommMap->at(i).end(); it++){
-        	destTask = cm->CustomMap[it->first];
-        	CommMap->at(srcTask)[destTask] = 1; //1 could be changed to the weight (it->second) in the future 
-        	//std::cout << srcTask << " communicates with " << destTask << std::endl;
+	        for(std::map<int, int>::iterator it = rawCommMap->at(i).begin(); it != rawCommMap->at(i).end(); it++){
+	        	destTask = cm->CustomMap[it->first];
+	        	CommMap->at(srcTask)[destTask] = 1; //1 could be changed to the weight (it->second) in the future
+	        	//if(0 == rank()) 
+	        		//std::cout << srcTask << " communicates with " << destTask << std::endl;
+			}
 		}
 	}
-
-	//unsigned worldSize = size();
-
-    if(0 == rank()) {
-		output("Unstructured communication motif iterations: %" PRIu32 "\n", iterations);
-		output("Unstructured communication motif iterms/cell: %" PRIu32 "\n", items_per_cell);
+	//Actual communication map is the same as the raw communication map
+	else{
+		CommMap = rawCommMap;
 	}
-
 
 	/*
 	for(unsigned int i = 0; i < rawCommMap->size(); i++){
@@ -106,6 +116,10 @@ bool EmberUnstructuredGenerator::generate( std::queue<EmberEvent*>& evQ )
 {
     verbose(CALL_INFO, 1, 0, "loop=%d\n", m_loopIndex );
 
+    	if(nsCompute > 0) {
+    		enQ_compute( evQ, nsCompute);
+    	}
+
 		std::vector<MessageRequest*> requests;
 
         for(std::map<int, int>::iterator it = CommMap->at(rank()).begin(); it != CommMap->at(rank()).end(); it++){
@@ -113,8 +127,8 @@ bool EmberUnstructuredGenerator::generate( std::queue<EmberEvent*>& evQ )
 			requests.push_back(req);
         	
         	//std::cout << rank() << " communicates with " << it->first << std::endl;
-			enQ_irecv( evQ, (int32_t)it->first, items_per_cell * sizeof_cell * ny * nz, 0, GroupWorld, req);
-			enQ_send( evQ , (int32_t)it->first, items_per_cell * sizeof_cell * ny * nz, 0, GroupWorld);
+			enQ_irecv( evQ, (int32_t)it->first, items_per_cell * sizeof_cell * p_size, 0, GroupWorld, req);
+			enQ_send( evQ , (int32_t)it->first, items_per_cell * sizeof_cell * p_size, 0, GroupWorld);
 		}
 
 		for(uint32_t i = 0; i < requests.size(); ++i) {
@@ -124,40 +138,15 @@ bool EmberUnstructuredGenerator::generate( std::queue<EmberEvent*>& evQ )
 		requests.clear();
 
 		/*
-		if(x_down > -1) {
-			MessageRequest*  req  = new MessageRequest();
-			requests.push_back(req);
-
-			enQ_irecv( evQ, x_down, items_per_cell * sizeof_cell * ny * nz, 0, GroupWorld, req);
-		}
-
-		if(x_up > -1) {
-			MessageRequest*  req  = new MessageRequest();
-			requests.push_back(req);
-
-			enQ_irecv( evQ, x_up, items_per_cell * sizeof_cell * ny * nz, 0, GroupWorld, req);
-		}
-
-		if(x_down > -1) {
-			enQ_send( evQ ,x_down, items_per_cell * sizeof_cell * ny * nz, 0, GroupWorld);
-		}
-
-		if(x_up > -1) {
-			enQ_send( evQ ,x_up, items_per_cell * sizeof_cell * ny * nz, 0, GroupWorld);
-		}
-
-		for(uint32_t i = 0; i < requests.size(); ++i) {
-			enQ_wait( evQ, requests[i]);
-		}
-
-		requests.clear();
-
 		if(nsCopyTime > 0) {
 			enQ_compute( evQ, nsCopyTime);
 		}
 		*/
 
     if ( ++m_loopIndex == iterations ) {
+    	//NetworkSim: report total running time
+        output("Job Finished: JobNum:%d Time:%" PRIu64 " us\n", jobId,  getCurrentSimTimeMicro());
+
         return true;
     } else {
         return false;

@@ -288,6 +288,8 @@ static const ElementInfoParam component_params[] = {
 
     { "rankmapper", "Sets the rank mapping SST module to load to rank translations, default is linear mapping", "ember.LinearMap" },
 
+    { "mapFile", "Sets the name of the input file for custom map", "mapFile.txt" },
+
     { "motif%(motif_count)d", "Sets the event generator or motif for the engine", "ember.EmberPingPongGenerator" },
 
     { "name", "Sets the event generator or motif for the engine", "ember.EmberPingPongGenerator" },
@@ -424,11 +426,9 @@ static const ElementInfoParam stop_params[] = {
 //NetworkSim: unstructured motif params
 static const ElementInfoParam unstructured_params[] = {
 	{	"arg.iterations",		"Sets the number of unstructured motif operations to perform", 	"1"},
-	{	"arg.compute",		"Sets the time spent computing",	 	"1"},
-	{	"arg.graphfile",		"Name of the file the includes the communication graph",	 	"Null"},
-	{	"arg.nx",			"Sets the problem size in X-dimension",			"100"},
-	{	"arg.ny",			"Sets the problem size in Y-dimension",			"100"},
-	{	"arg.nz",			"Sets the problem size in Z-dimension",			"100"},
+	{	"arg.computetime",		"Sets the number of nanoseconds to compute for", 	"0"},
+	{	"arg.graphfile",		"Name of the file the includes the communication graph",	 	"-1"},
+	{	"arg.p_size",			"Sets the problem size",			"10000"},
 	{	"arg.fields_per_cell",	"Specify how many variables are being computed per cell (this is one of the dimensions in message size. Default is 1", "1"},
 	{	"arg.datatype_width",	"Specify the size of a single variable, single grid point, typically 8 for double, 4 for float, default is 8 (double). This scales message size to ensure byte count is correct.", "8"},
 	{	NULL,	NULL,	NULL	}
@@ -709,7 +709,7 @@ static const ElementInfoParam linearMapper_params[] = {
 
 //NetworkSim: added custom mapper params
 static const ElementInfoParam customMapper_params[] = {
-	{	"mapFile",			"Sets the name of the input file for custom map", "customMap.txt" },
+	{	"mapFile",			"Sets the name of the input file for custom map", "mapFile.txt" },
 	{	"_mapjobId",		"Sets the jobId for custom map", "-1" },
 	{	NULL, NULL, NULL 	}
 };
