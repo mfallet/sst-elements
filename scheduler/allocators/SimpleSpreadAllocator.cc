@@ -41,9 +41,7 @@ using namespace std;
 
 
 AllocInfo* SimpleSpreadAllocator::allocate(Job* j)
-{  
-    cout << "----------\n";
-    cout << "Allocating job " << *(j->getID()) << endl;
+{
     if (canAllocate(*j)) {
         AllocInfo* ai = new AllocInfo(j, dMach);
         int lastNode = -1;
@@ -52,7 +50,6 @@ AllocInfo* SimpleSpreadAllocator::allocate(Job* j)
                 lastNode = nextNodeId(lastNode);
             } while(!dMach.isFree(lastNode));
             int rId = dMach.routerOf(lastNode);
-            cout << lastNode << "\t" << dMach.localIdOf(rId) << "\t" << dMach.groupOf(rId) << endl;
             ai->nodeIndices[i] = lastNode;
         }
         return ai;
