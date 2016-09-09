@@ -205,7 +205,8 @@ private:
         
         // If we have waiting requests send them now
         requestsThisCycle_ = 0;
-        while (!requestBuffer_.empty()) {
+        int buffSize = requestBuffer_.size();
+        while (buffSize != requestsThisCycle_) {
             if (requestsThisCycle_ == maxRequestsPerCycle_) {
                 break;
             }

@@ -246,7 +246,8 @@ void Cache::processEvent(MemEvent* event, bool replay) {
             // Determine if request should be NACKed: Request cannot be handled immediately and there are no free MSHRs to buffer the request
             if (!replay && mshr_->isAlmostFull()) { 
                 // Requests can cause deadlock because requests and fwd requests (inv, fetch, etc) share mshrs -> always leave one mshr free for fwd requests
-                sendNACK(event);
+                if (!cf_.L1_) sendNACK(event);
+                else if (canStall) requestBuffer_.push(event); // TODO set up so that L1 can stall processor on too many outstanding misses instead of buffer @ the cache
                 break;
             }
             
