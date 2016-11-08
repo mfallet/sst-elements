@@ -50,27 +50,40 @@ comp_memory.addParams({
 
 mmu = sst.Component("mmu0", "Samba")
 mmu.addParams({
-        "corecount":  1,
-        "page_size_L1": 4,
-        "assoc_L1": 2,
-        "size_L1": 2,
+	"os_page_size": 1024*1024,
+        "corecount": 1,
+        "sizes_L1": 3,
+        "page_size1_L1": 4,
+        "page_size2_L1": 2048,
+        "page_size3_L1": 1024*1024,
+        "assoc1_L1": 4,
+        "size1_L1": 64,
+        "assoc2_L1": 4,
+        "size2_L1": 32,
+        "assoc3_L1": 4,
+        "size3_L1": 4,
+        "sizes_L2": 3,
+        "page_size1_L2": 4,
+        "page_size2_L2": 2048,
+        "page_size3_L2": 1024*1024,
+        "assoc1_L2": 12,
+        "size1_L2": 1536,
+        "assoc2_L2": 12,
+        "size2_L2": 1536,
+        "assoc3_L2": 4,
+        "size3_L2": 16,
         "clock": "2GHz",
         "levels": 2,
-        "max_width_L1": 1,
-        "max_outstanding_L1": 1,
-        "latency_L1": 5,
-        "parallel_mode_L1": 0,
-        "page_size_L2": 4,
-        "assoc_L2": 8,
-        "size_L2": 128,
-        "max_outstanding_L2": 8,
-        "max_width_L2": 8,
-        "latency_L2": 5,
-        "upper_link_L1": 0, # we assume same link latency of up and down traffic of the link
-        "upper_link_L2": 0,
+        "max_width_L1": 2,
+        "max_outstanding_L1": 2,
+        "latency_L1": 1,
+        "parallel_mode_L1": 1,
+        "max_outstanding_L2": 4,
+        "max_width_L2": 4,
+        "latency_L2": 20,
         "parallel_mode_L2": 0
-});
 
+});
 
 mmu.enableAllStatistics({"type":"sst.AccumulatorStatistic"})
 

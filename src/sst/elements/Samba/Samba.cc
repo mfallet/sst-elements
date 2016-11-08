@@ -68,12 +68,12 @@ Samba::Samba(SST::ComponentId_t id, SST::Params& params): Component(id) {
 		TLB[i]= new TLBhierarchy(i, levels /* level */, (SST::Component *) this,params);
 
 
-		SST::Link * link2 = configureLink(link_buffer, "0ps", new Event::Handler<TLBhierarchy>(TLB[i], &TLBhierarchy::handleEvent_CPU));
+		SST::Link * link2 = configureLink(link_buffer, "50ps", new Event::Handler<TLBhierarchy>(TLB[i], &TLBhierarchy::handleEvent_CPU));
 		cpu_to_mmu[i] = link2;
 
 
 
-		SST::Link * link = configureLink(link_buffer2, "0ps", new Event::Handler<TLBhierarchy>(TLB[i], &TLBhierarchy::handleEvent_CACHE));
+		SST::Link * link = configureLink(link_buffer2, "50ps", new Event::Handler<TLBhierarchy>(TLB[i], &TLBhierarchy::handleEvent_CACHE));
 		mmu_to_cache[i] = link;
 
 

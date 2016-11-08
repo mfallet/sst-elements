@@ -653,6 +653,7 @@ bool ArielCore::processNextEvent() {
 }
 
 void ArielCore::tick() {
+
 	if(! isHalted) {
 		ARIEL_CORE_VERBOSE(16, output->verbose(CALL_INFO, 16, 0, "Ticking core id %" PRIu32 "\n", coreID));
 		for(uint32_t i = 0; i < maxIssuePerCycle; ++i) {
